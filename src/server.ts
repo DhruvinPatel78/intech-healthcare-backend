@@ -74,8 +74,14 @@ const corsOptions: CorsOptions = {
 // Apply CORS first
 app.use(cors(corsOptions) as any);
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions) as any);
+// Handle preflight requests explicitly (Express v5 doesn't support '*' path)
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    res.status(204).end();
+    return;
+  }
+  next();
+});
 
 // Other Middleware
 app.use(helmet({
