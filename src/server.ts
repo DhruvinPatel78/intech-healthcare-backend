@@ -21,8 +21,24 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Connect to Database
-connectDB();
+// Connect to Database (lazy connection for serverless)
+let isConnected = false;
+const ensureDBConnection = async () => {
+  if (!isConnected) {
+    await connectDB();
+    isConnected = true;
+  }
+};
+
+// Ensure DB connection for all API routes
+app.use('/api', async (req, res, next) => {
+  try {
+    await ensureDBConnection();
+    next();
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Database connection failed' });
+  }
+});
 
 // Middleware
 app.use(helmet()); // Security headers
@@ -76,6 +92,15 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 // Rate limiting
 app.use('/api/', rateLimiter);
 
+// Root route
+app.get('/', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Intech Healthcare API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({
@@ -103,16 +128,18 @@ app.use((req, res) => {
 // Error handler (must be last)
 app.use(errorHandler);
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`
+// Only start server when not in Vercel (serverless) environment
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`
     ╔═══════════════════════════════════════════╗
     ║  🏥 Intech Healthcare API Server         ║
     ║  ✅ Running on: http://localhost:${PORT}    ║
     ║  🌍 Environment: ${process.env.NODE_ENV || 'development'}              ║
     ╚═══════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+}
 
 export default app;
 
