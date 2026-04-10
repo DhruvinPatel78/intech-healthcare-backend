@@ -10,7 +10,7 @@ export const connectDB = async (): Promise<void> => {
     console.log(`📊 Database: ${mongoose.connection.name}`);
   } catch (error) {
     console.error('❌ MongoDB Connection Error:', error);
-    process.exit(1);
+    throw error;
   }
 };
 
