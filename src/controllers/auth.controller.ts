@@ -260,7 +260,7 @@ export const forgotPassword = async (req: Request, res: Response): Promise<void>
     await user.save({ validateBeforeSave: false });
 
     // Create reset url
-    const frontendUrl = process.env.VITE_ADMIN_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.VITE_ADMIN_URL || 'http://localhost:5173' || 'https://admin.intechhealthcare.com';
     const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     const message = `
